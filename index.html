@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fit – רהיט בגודל אמיתי</title>
+  <meta name="theme-color" content="#FFFDFB">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Pinned library versions: change these numbers on purpose only. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.4.0/dist/model-viewer.min.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <h1>Fit</h1>
+      <p>רואים את הרהיט בחדר שלכם, בגודל האמיתי</p>
+    </header>
+
+    <!-- 1. Model -->
+    <section class="card">
+      <h2><span class="num">1</span> בחירת דגם</h2>
+      <div class="row">
+        <label class="btn btn-soft file-btn">
+          העלאת דגם
+          <input id="file" type="file" accept=".glb,model/gltf-binary" hidden>
+        </label>
+        <button id="demo" class="btn btn-soft" type="button">ספת דוגמה</button>
+      </div>
+      <p id="modelName" class="muted">עדיין לא נבחר דגם</p>
+      <p id="origSize" class="muted small"></p>
+    </section>
+
+    <!-- 2. Dimensions -->
+    <section class="card">
+      <h2><span class="num">2</span> מידות אמיתיות (ס״מ)</h2>
+      <div class="dims">
+        <label>רוחב<input id="w" type="number" inputmode="decimal" min="1" step="0.5" value="200"></label>
+        <label>עומק<input id="d" type="number" inputmode="decimal" min="1" step="0.5" value="90"></label>
+        <label>גובה<input id="h" type="number" inputmode="decimal" min="1" step="0.5" value="85"></label>
+      </div>
+
+      <div class="seg" role="radiogroup" aria-label="שיטת התאמה">
+        <label><input type="radio" name="mode" value="stretch" checked><span>מתיחה למידות מדויקות</span></label>
+        <label><input type="radio" name="mode" value="fit"><span>שמירה על פרופורציות (לפי רוחב)</span></label>
+      </div>
+
+      <div class="row">
+        <button id="rotate" class="btn btn-ghost" type="button">↻ סיבוב 90°</button>
+        <span class="muted small">אם הרוחב והעומק התהפכו</span>
+      </div>
+    </section>
+
+    <!-- 3. Preview + AR -->
+    <section class="card">
+      <h2><span class="num">3</span> תצוגה וחדר</h2>
+      <div class="viewer-box">
+        <model-viewer id="mv"
+          alt="תצוגת הרהיט"
+          ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
+          camera-controls touch-action="pan-y"
+          shadow-intensity="1" exposure="1.05"
+          environment-image="neutral">
+          <button slot="ar-button" id="arBtn" class="btn btn-main ar-btn" type="button">צפייה בחדר שלי</button>
+          <div slot="progress-bar"></div>
+        </model-viewer>
+        <div id="empty" class="empty">בחרו דגם או לחצו על ״ספת דוגמה״</div>
+      </div>
+      <p id="finalSize" class="result"></p>
+      <p id="arNote" class="muted small" hidden>כפתור החדר (AR) מופיע רק בטלפון. פתחו את הקישור הזה בטלפון.</p>
+      <p id="status" class="muted small" aria-live="polite"></p>
+    </section>
+
+    <!-- 4. Download -->
+    <section class="card">
+      <h2><span class="num">4</span> שמירה</h2>
+      <button id="download" class="btn btn-main" type="button" disabled>הורדת הדגם המותאם</button>
+    </section>
+
+    <footer class="muted small">Fit · אב־טיפוס 1</footer>
+  </main>
+</body>
+</html>
