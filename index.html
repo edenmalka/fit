@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Fit – רהיט בגודל אמיתי</title>
+  <title>Fit – רהיטים בגודל אמיתי</title>
   <meta name="theme-color" content="#FFFDFB">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&family=Varela+Round&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 
   <!-- Pinned library versions: change these numbers on purpose only. -->
@@ -23,73 +23,90 @@
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <main class="wrap">
-    <header class="hero">
-      <h1>Fit</h1>
-      <p>רואים את הרהיט בחדר שלכם, בגודל האמיתי</p>
-    </header>
+  <header class="top">
+    <div class="brand">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 15.5V11a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4.5M3 15.5h18v2.5H3zM6 18v2M18 18v2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="wordmark">Fit</span>
+    </div>
+    <p class="tagline">רהיטים בגודל אמיתי, בחדר שלך</p>
+  </header>
 
-    <!-- 1. Model -->
-    <section class="card">
-      <h2><span class="num">1</span> בחירת דגם</h2>
-      <div class="row">
-        <label class="btn btn-soft file-btn">
-          העלאת דגם
-          <input id="file" type="file" accept=".glb,model/gltf-binary" hidden>
-        </label>
-        <button id="demo" class="btn btn-soft" type="button">ספת דוגמה</button>
+  <main>
+    <!-- Hero: the 3D preview -->
+    <section class="stage" aria-label="תצוגת הרהיט">
+      <model-viewer id="mv"
+        alt="תצוגה תלת־ממדית של הרהיט"
+        loading="eager" reveal="auto"
+        ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
+        camera-controls touch-action="pan-y" interaction-prompt="none"
+        camera-orbit="-28deg 76deg auto" min-camera-orbit="auto 20deg auto" max-camera-orbit="auto 92deg auto"
+        tone-mapping="commerce" environment-image="neutral" exposure="1"
+        shadow-intensity="1" shadow-softness="0.9">
+        <div slot="ar-button" hidden></div>
+        <div slot="progress-bar"></div>
+      </model-viewer>
+
+      <div class="chips" aria-live="polite">
+        <span id="sizeChip" class="chip chip-size" hidden></span>
+        <span id="nameChip" class="chip chip-soft" hidden></span>
       </div>
-      <p id="modelName" class="muted">עדיין לא נבחר דגם</p>
-      <p id="origSize" class="muted small"></p>
+
+      <div id="loading" class="stage-msg" hidden><span class="spinner"></span></div>
+      <div id="empty" class="stage-msg">
+        <p>העלו דגם ‎GLB‎ כדי לראות אותו כאן</p>
+      </div>
     </section>
 
-    <!-- 2. Dimensions -->
-    <section class="card">
-      <h2><span class="num">2</span> מידות אמיתיות (ס״מ)</h2>
+    <div class="cta-wrap">
+      <button id="arBtn" class="btn-primary" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Zm0 0v9m0 0 8-4.5M12 12l-8-4.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+        צפייה בחדר שלי
+      </button>
+      <p id="arHint" class="hint" hidden>כדי להציב את הרהיט בחדר, פתחו את הקישור הזה בטלפון.</p>
+    </div>
+
+    <!-- Compact control panel -->
+    <section class="panel" aria-label="הגדרות">
+      <div class="source">
+        <label class="btn-outline">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V4m0 0-4 4m4-4 4 4M5 15v3a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          העלאת דגם
+          <input id="file" type="file" accept=".glb,model/gltf-binary">
+        </label>
+        <button id="demo" class="link" type="button">או לנסות ספת דוגמה</button>
+      </div>
+
+      <div class="field-head">
+        <h2>מידות אמיתיות</h2>
+        <span class="unit">ס״מ</span>
+      </div>
       <div class="dims">
-        <label>רוחב<input id="w" type="number" inputmode="decimal" min="1" step="0.5" value="200"></label>
-        <label>עומק<input id="d" type="number" inputmode="decimal" min="1" step="0.5" value="90"></label>
-        <label>גובה<input id="h" type="number" inputmode="decimal" min="1" step="0.5" value="85"></label>
+        <label class="dim"><span>רוחב</span><input id="w" type="number" inputmode="decimal" min="1" step="0.5" value="200"></label>
+        <label class="dim"><span>עומק</span><input id="d" type="number" inputmode="decimal" min="1" step="0.5" value="90"></label>
+        <label class="dim"><span>גובה</span><input id="h" type="number" inputmode="decimal" min="1" step="0.5" value="85"></label>
       </div>
 
       <div class="seg" role="radiogroup" aria-label="שיטת התאמה">
-        <label><input type="radio" name="mode" value="stretch" checked><span>מתיחה למידות מדויקות</span></label>
-        <label><input type="radio" name="mode" value="fit"><span>שמירה על פרופורציות (לפי רוחב)</span></label>
+        <label><input type="radio" name="mode" value="stretch" checked><span>מידות מדויקות</span></label>
+        <label><input type="radio" name="mode" value="fit"><span>שמירת פרופורציות</span></label>
+      </div>
+      <p id="modeHint" class="hint small">כל ציר מותאם בדיוק למידה שהזנתם</p>
+
+      <div class="tools">
+        <button id="rotate" class="btn-quiet" type="button" title="אם הרוחב והעומק התהפכו">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          סיבוב 90°
+        </button>
+        <button id="download" class="btn-quiet" type="button" disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          הורדת הקובץ
+        </button>
       </div>
 
-      <div class="row">
-        <button id="rotate" class="btn btn-ghost" type="button">↻ סיבוב 90°</button>
-        <span class="muted small">אם הרוחב והעומק התהפכו</span>
-      </div>
+      <p id="status" class="status" role="status" aria-live="polite"></p>
     </section>
-
-    <!-- 3. Preview + AR -->
-    <section class="card">
-      <h2><span class="num">3</span> תצוגה וחדר</h2>
-      <div class="viewer-box">
-        <model-viewer id="mv"
-          alt="תצוגת הרהיט"
-          ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
-          camera-controls touch-action="pan-y"
-          shadow-intensity="1" exposure="1.05"
-          environment-image="neutral">
-          <button slot="ar-button" id="arBtn" class="btn btn-main ar-btn" type="button">צפייה בחדר שלי</button>
-          <div slot="progress-bar"></div>
-        </model-viewer>
-        <div id="empty" class="empty">בחרו דגם או לחצו על ״ספת דוגמה״</div>
-      </div>
-      <p id="finalSize" class="result"></p>
-      <p id="arNote" class="muted small" hidden>כפתור החדר (AR) מופיע רק בטלפון. פתחו את הקישור הזה בטלפון.</p>
-      <p id="status" class="muted small" aria-live="polite"></p>
-    </section>
-
-    <!-- 4. Download -->
-    <section class="card">
-      <h2><span class="num">4</span> שמירה</h2>
-      <button id="download" class="btn btn-main" type="button" disabled>הורדת הדגם המותאם</button>
-    </section>
-
-    <footer class="muted small">Fit · אב־טיפוס 1</footer>
   </main>
 </body>
 </html>

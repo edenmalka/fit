@@ -19,28 +19,32 @@ loader.setDRACOLoader(draco);
 loader.setMeshoptDecoder(MeshoptDecoder);
 const exporter = new GLTFExporter();
 
+// Bump ?v= whenever assets/demo-sofa.glb changes, so phones don't show a cached old copy.
+const DEMO = { url: 'assets/demo-sofa.glb?v=2', name: 'ספת דוגמה', file: 'demo-sofa', w: 200, d: 90, h: 85 };
+
 const state = {
   source: null,     // original loaded scene (never modified)
   baseName: 'model',
+  label: '',
   quarterTurns: 0,  // rotation around the vertical axis, in 90° steps
   blobUrl: null,
   blob: null,
-  lastSize: null,   // final size in cm {w, d, h}
+  lastSize: null,   // final size in cm {w, d, h, minY}
 };
 
-const cm = (m) => Math.round(m * 1000) / 10;               // meters → cm, 1 decimal
-const fmt = (s) => `${cm(s.x)} × ${cm(s.z)} × ${cm(s.y)}`; // W × D × H
+const cm = (m) => Math.round(m * 1000) / 10; // meters → cm, 1 decimal
 
-function setStatus(text) { $('status').textContent = text; }
+function setStatus(text, isError = false) {
+  $('status').textContent = text;
+  $('status').classList.toggle('error', isError);
+}
+function setLoading(on) { $('loading').hidden = !on; }
 
 function readDims() {
   const v = (id) => parseFloat($(id).value);
   return { w: v('w'), d: v('d'), h: v('h') };
 }
-
-function mode() {
-  return document.querySelector('input[name="mode"]:checked').value;
-}
+function mode() { return document.querySelector('input[name="mode"]:checked').value; }
 
 /** Exact axis-aligned box of an object, from every vertex. */
 function measure(obj) {
@@ -48,7 +52,7 @@ function measure(obj) {
   return new THREE.Box3().setFromObject(obj, true);
 }
 
-/** Builds the scaled, floored, centered copy. Returns { root, size } (size in meters). */
+/** Builds the scaled, floored, centered copy. Returns { root, size, minY } (meters). */
 function buildScaled() {
   const { w, d, h } = readDims();
   const model = state.source.clone(true);
@@ -78,7 +82,7 @@ function buildScaled() {
     scaler.scale.set(s, s, s);
   }
 
-  // Bottom on the floor, centered horizontally.
+  // Bottom on the floor (min Y = 0), centered horizontally.
   const box = measure(root);
   const c = box.getCenter(new THREE.Vector3());
   root.position.set(-c.x, -box.min.y, -c.z);
@@ -87,16 +91,27 @@ function buildScaled() {
   return { root, size: finalBox.getSize(new THREE.Vector3()), minY: finalBox.min.y };
 }
 
+function showSize({ w, d, h }) {
+  const chip = $('sizeChip');
+  chip.innerHTML = '';
+  const nums = document.createElement('bdi');
+  nums.dir = 'ltr';
+  nums.textContent = `${w} × ${d} × ${h}`;
+  chip.append(nums, ' ס״מ');
+  chip.title = 'רוחב × עומק × גובה';
+  chip.hidden = false;
+}
+
 let busy = false, again = false;
 async function rebuild() {
   if (!state.source) return;
   if (busy) { again = true; return; }
   const { w, d, h } = readDims();
   const needed = mode() === 'stretch' ? [w, d, h] : [w];
-  if (needed.some((n) => !(n > 0))) { setStatus('נא להזין מידות חיוביות'); return; }
+  if (needed.some((n) => !(n > 0))) { setStatus('נא להזין מידות גדולות מ־0', true); return; }
 
   busy = true;
-  setStatus('מתאים את הגודל…');
+  setLoading(true);
   try {
     const { root, size, minY } = buildScaled();
     const glb = await exporter.parseAsync(root, { binary: true });
@@ -109,12 +124,14 @@ async function rebuild() {
     mv.src = state.blobUrl;
 
     if (mode() === 'fit') { $('d').value = cm(size.z); $('h').value = cm(size.y); }
-    $('finalSize').textContent = `מידה סופית: ${fmt(size)} ס״מ (רוחב × עומק × גובה)`;
+    showSize(state.lastSize);
     $('download').disabled = false;
+    $('arBtn').disabled = false;
     setStatus('');
   } catch (err) {
     console.error(err);
-    setStatus('לא הצלחתי לעבד את הדגם. נסו קובץ אחר.');
+    setLoading(false);
+    setStatus('לא הצלחנו לעבד את הדגם. נסו קובץ אחר.', true);
   } finally {
     busy = false;
     if (again) { again = false; rebuild(); }
@@ -124,37 +141,42 @@ async function rebuild() {
 let timer;
 function rebuildSoon() { clearTimeout(timer); timer = setTimeout(rebuild, 350); }
 
-async function loadArrayBuffer(buffer, name) {
-  setStatus('טוען דגם…');
+async function loadArrayBuffer(buffer, { baseName, label }) {
+  setLoading(true);
+  $('empty').hidden = true;
   try {
     const gltf = await loader.parseAsync(buffer, '');
     state.source = gltf.scene;
-    state.baseName = name.replace(/\.glb$/i, '') || 'model';
+    state.baseName = baseName || 'model';
+    state.label = label;
     state.quarterTurns = 0;
-    $('modelName').textContent = `דגם: ${name}`;
-    $('origSize').textContent =
-      `גודל מקורי בקובץ: ${fmt(measure(state.source).getSize(new THREE.Vector3()))} ס״מ`;
-    $('empty').hidden = true;
+    $('nameChip').textContent = label;
+    $('nameChip').hidden = false;
     await rebuild();
   } catch (err) {
     console.error(err);
-    setStatus('הקובץ לא נפתח. ודאו שזה קובץ GLB תקין.');
+    setLoading(false);
+    if (!state.source) $('empty').hidden = false;
+    setStatus('הקובץ לא נפתח. ודאו שזה קובץ GLB תקין.', true);
   }
+}
+
+async function loadDemo() {
+  $('w').value = DEMO.w; $('d').value = DEMO.d; $('h').value = DEMO.h;
+  const res = await fetch(DEMO.url);
+  await loadArrayBuffer(await res.arrayBuffer(), { baseName: DEMO.file, label: DEMO.name });
 }
 
 // ---- UI wiring ----
 $('file').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  await loadArrayBuffer(await file.arrayBuffer(), file.name);
+  const baseName = file.name.replace(/\.glb$/i, '');
+  await loadArrayBuffer(await file.arrayBuffer(), { baseName, label: file.name });
   e.target.value = '';
 });
 
-$('demo').addEventListener('click', async () => {
-  $('w').value = 200; $('d').value = 90; $('h').value = 85;
-  const res = await fetch('assets/demo-sofa.glb');
-  await loadArrayBuffer(await res.arrayBuffer(), 'demo-sofa.glb');
-});
+$('demo').addEventListener('click', loadDemo);
 
 for (const id of ['w', 'd', 'h']) $(id).addEventListener('input', rebuildSoon);
 
@@ -162,6 +184,9 @@ document.querySelectorAll('input[name="mode"]').forEach((r) =>
   r.addEventListener('change', () => {
     const fit = mode() === 'fit';
     $('d').disabled = fit; $('h').disabled = fit;
+    $('modeHint').textContent = fit
+      ? 'הדגם נשמר בפרופורציות שלו ומותאם לפי הרוחב'
+      : 'כל ציר מותאם בדיוק למידה שהזנתם';
     rebuild();
   }));
 
@@ -181,9 +206,22 @@ $('download').addEventListener('click', () => {
   a.remove();
 });
 
-mv.addEventListener('load', () => {
-  $('arNote').hidden = mv.canActivateAR;
+$('arBtn').addEventListener('click', () => {
+  if (mv.canActivateAR) {
+    mv.activateAR();
+  } else {
+    $('arHint').hidden = false;
+  }
 });
+
+mv.addEventListener('load', () => setLoading(false));
+mv.addEventListener('error', () => {
+  setLoading(false);
+  setStatus('התצוגה לא נטענה. נסו לרענן את העמוד.', true);
+});
+
+// Show the demo sofa right away so the preview is never empty.
+loadDemo().catch(() => { $('empty').hidden = false; setLoading(false); });
 
 // For checking in the browser console: window.fit.state.lastSize
 window.fit = { state, rebuild, loadArrayBuffer };
