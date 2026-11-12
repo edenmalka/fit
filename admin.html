@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Fit – צד החנות</title>
+  <meta name="theme-color" content="#FFFDFB">
+  <meta name="robots" content="noindex">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;600&family=Varela+Round&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css?v=3">
+
+  <!-- Pinned library versions: change these numbers on purpose only. -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.183.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.183.0/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.4.0/dist/model-viewer.min.js"></script>
+  <script type="module" src="admin.js?v=3"></script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./">
+      <span class="logo" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 15.5V11a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3v4.5M3 15.5h18v2.5H3zM6 18v2M18 18v2" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </span>
+      <span class="wordmark">Fit</span>
+    </a>
+    <span class="badge">צד החנות</span>
+  </header>
+
+  <main>
+    <!-- Sign-in -->
+    <section id="account" class="panel account" aria-label="התחברות">
+      <div id="acctOut">
+        <p class="lead">כדי ליצור דגם תלת־ממדי מתמונה, צריך להתחבר עם חשבון Hugging Face חינמי. זמן המחשב נלקח מהמכסה היומית החינמית שלך (בערך 1–2 דגמים ביום).</p>
+        <button id="signIn" class="btn-hf" type="button">
+          <span aria-hidden="true">🤗</span> התחברות עם Hugging Face
+        </button>
+        <p id="notConfigured" class="hint small" hidden>ההתחברות עוד לא הוגדרה באתר (חסר מזהה אפליקציה).</p>
+      </div>
+      <div id="acctIn" class="acct-in" hidden>
+        <img id="avatar" alt="" width="36" height="36">
+        <div class="acct-text">
+          <strong id="userName"></strong>
+          <span class="hint-inline">מחוברת · מכסה יומית חינמית</span>
+        </div>
+        <button id="signOut" class="link" type="button">התנתקות</button>
+      </div>
+    </section>
+
+    <!-- Step 1: photo -->
+    <section id="photoStep" class="panel step" aria-label="תמונה">
+      <h2 class="step-title"><span class="num">1</span> תמונה של הרהיט</h2>
+
+      <label id="photoBtn" class="btn-primary as-label">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8.5A2.5 2.5 0 0 1 6.5 6h1.6l1.4-2h5l1.4 2h1.6A2.5 2.5 0 0 1 20 8.5v8A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-8Z M12 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg>
+        צלמי או העלי תמונה של רהיט
+        <input id="photo" type="file" accept="image/*,.heic,.heif,.avif,.webp">
+      </label>
+
+      <details id="guide" class="guide" open>
+        <summary>איך מצלמים תמונה שתיתן דגם טוב</summary>
+        <ol>
+          <li><b>רהיט אחד, שלם.</b> כל הרהיט בתוך התמונה – בלי לחתוך רגליים, ידיות או משענת.</li>
+          <li><b>זווית של שלושה רבעים.</b> קצת מהצד וקצת מלמעלה (מגובה המותניים), כך שרואים חזית, צד ומושב.</li>
+          <li><b>רקע פשוט.</b> קיר בהיר או רקע לבן, בלי אנשים, בלי חפצים צמודים ובלי רהיטים נוספים.</li>
+          <li><b>אור רך.</b> אור יום מחלון, בלי פלאש ובלי צללים חזקים.</li>
+          <li><b>קרוב וחד.</b> הרהיט ממלא בערך שלושה רבעים מהתמונה. עדיף להתקרב ברגליים מאשר בזום.</li>
+          <li><b>תמונת מוצר של היצרן</b> על רקע לבן מתאימה מצוין.</li>
+        </ol>
+        <p class="guide-note">חשוב לדעת: הבינה המלאכותית מנחשת את הצד שלא רואים בתמונה. חלקים דקים עם רווחים (כמו מסגרת עץ מכופפת) קשים לה – כדאי לבדוק את התוצאה מכל הכיוונים. את הגודל האמיתי קובעות המידות שתזיני בשלב הבא.</p>
+      </details>
+
+      <label class="small-upload">
+        יש לך כבר קובץ GLB? <u>העלאה ידנית</u>
+        <input id="file" type="file" accept=".glb,model/gltf-binary">
+      </label>
+    </section>
+
+    <!-- Progress / errors -->
+    <section id="progress" class="panel progress" aria-live="polite" hidden>
+      <div class="progress-row">
+        <img id="photoThumb" class="thumb" alt="התמונה שהעלית">
+        <div class="progress-text">
+          <strong id="progText">מתחילים…</strong>
+          <span id="progSub" class="hint-inline">בדרך כלל לוקח 1–3 דקות. אפשר להשאיר את המסך פתוח.</span>
+        </div>
+      </div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100"><span id="barFill"></span></div>
+      <div class="progress-foot">
+        <span id="elapsed" class="hint-inline">0:00</span>
+        <button id="cancel" class="link" type="button">ביטול</button>
+      </div>
+      <div id="errorBox" class="error-box" hidden>
+        <p id="errorText"></p>
+        <div class="error-actions">
+          <button id="retry" class="btn-outline" type="button">נסו שוב</button>
+          <button id="newPhoto" class="link" type="button">תמונה אחרת</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Step 2: size, check, save -->
+    <section id="editStep" class="step" hidden>
+      <section class="stage" aria-label="תצוגת הרהיט">
+        <model-viewer id="mv"
+          alt="תצוגה תלת־ממדית של הרהיט"
+          loading="eager" reveal="auto"
+          ar ar-modes="webxr scene-viewer quick-look" ar-scale="fixed" ar-placement="floor"
+          camera-controls touch-action="pan-y" interaction-prompt="none"
+          camera-orbit="-28deg 76deg auto" min-camera-orbit="auto 20deg auto" max-camera-orbit="auto 92deg auto"
+          tone-mapping="commerce" environment-image="neutral" exposure="1"
+          shadow-intensity="1" shadow-softness="0.9">
+          <div slot="ar-button" hidden></div>
+          <div slot="progress-bar"></div>
+        </model-viewer>
+        <div class="chips" aria-live="polite">
+          <span id="sizeChip" class="chip chip-size" hidden></span>
+        </div>
+        <div id="loading" class="stage-msg" hidden><span class="spinner"></span></div>
+      </section>
+
+      <section class="panel">
+        <h2 class="step-title"><span class="num">2</span> מידות אמיתיות ושמירה</h2>
+
+        <label class="name-field">
+          <span>שם המוצר</span>
+          <input id="name" type="text" maxlength="60" placeholder="למשל: כורסת STRANDMON" autocomplete="off">
+        </label>
+
+        <div class="field-head">
+          <h3>מידות</h3>
+          <span class="unit">ס״מ</span>
+        </div>
+        <div class="dims">
+          <label class="dim"><span>רוחב</span><input id="w" type="number" inputmode="decimal" min="1" step="0.5" value="82"></label>
+          <label class="dim"><span>עומק</span><input id="d" type="number" inputmode="decimal" min="1" step="0.5" value="96"></label>
+          <label class="dim"><span>גובה</span><input id="h" type="number" inputmode="decimal" min="1" step="0.5" value="101"></label>
+        </div>
+
+        <div class="seg" role="radiogroup" aria-label="שיטת התאמה">
+          <label><input type="radio" name="mode" value="stretch" checked><span>מידות מדויקות</span></label>
+          <label><input type="radio" name="mode" value="fit"><span>שמירת פרופורציות</span></label>
+        </div>
+        <p id="modeHint" class="hint small">כל ציר מותאם בדיוק למידה שהזנת</p>
+
+        <div class="tools">
+          <button id="rotate" class="btn-quiet" type="button" title="אם החזית פונה לצד הלא נכון">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v4h-4" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            סיבוב 90°
+          </button>
+          <button id="arTest" class="btn-quiet" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 4 7.5v9L12 21l8-4.5v-9L12 3Zm0 0v9m0 0 8-4.5M12 12l-8-4.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>
+            בדיקה בחדר
+          </button>
+          <button id="download" class="btn-quiet" type="button" disabled>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11m0 0 4-4m-4 4-4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            הורדה
+          </button>
+        </div>
+        <p id="arHint" class="hint" hidden>כדי להציב את הרהיט בחדר, פתחי את העמוד בטלפון.</p>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+
+        <button id="save" class="btn-primary save" type="button" disabled>שמירה לקטלוג</button>
+      </section>
+    </section>
+
+    <!-- Saved -->
+    <section id="saved" class="panel saved" hidden>
+      <p class="saved-title">✓ נשמר בקטלוג</p>
+      <a id="savedLink" class="btn-primary as-link" href="#">לעמוד המוצר</a>
+      <button id="another" class="link" type="button">יצירת מוצר נוסף</button>
+    </section>
+
+    <!-- The store's own items -->
+    <section class="panel mine" aria-label="המוצרים שלי">
+      <div class="field-head">
+        <h2 class="plain">המוצרים בקטלוג</h2>
+        <a class="link" href="./">תצוגת לקוח</a>
+      </div>
+      <ul id="myItems" class="my-items"></ul>
+      <p class="hint small">המוצרים נשמרים כרגע רק בדפדפן הזה, במכשיר הזה.</p>
+    </section>
+  </main>
+</body>
+</html>
